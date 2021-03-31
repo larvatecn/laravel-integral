@@ -157,9 +157,6 @@ class IntegralWallet extends Model
      */
     public function withdrawalsAction($integral, $channel, $recipient, $metaData = [])
     {
-        if ($integral < settings('integral.withdrawals_mix', 100)) {//提现金额小于最小提现金额不合法
-            return false;
-        }
         $currentIntegral = bcsub($this->integral, $integral);
         if ($currentIntegral < 0) {//计算后如果余额小于0，那么结果不合法。
             return false;
