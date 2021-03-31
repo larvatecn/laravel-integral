@@ -1,6 +1,6 @@
 {
   "name": "larva/laravel-integral",
-  "description": "This is a integral.",
+  "description": "Integral Extension for Laravel.",
   "keywords": [ "laravel", "integral", "larva" ],
   "type": "library",
   "license": "MIT",

@@ -1,6 +1,6 @@
 # laravel-integral
 
-Laravel 积分
+Integral Extension for Laravel. Laravel 积分
 
 ## 环境需求
 
@@ -24,8 +24,3 @@ This service provider must be registered.
     Larva\Integral\IntegralServiceProvider::class,
 ];
 ```
-
-
-
-
-
