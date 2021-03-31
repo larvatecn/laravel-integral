@@ -10,9 +10,9 @@ namespace Larva\Integral\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Larva\Integral\Events\WithdrawalCanceled;
-use Larva\Integral\Events\WithdrawalFailure;
-use Larva\Integral\Events\WithdrawalSuccess;
+use Larva\Integral\Events\WithdrawalsCanceled;
+use Larva\Integral\Events\WithdrawalsFailure;
+use Larva\Integral\Events\WithdrawalsSuccess;
 use Larva\Transaction\Models\Transfer;
 
 /**
@@ -33,7 +33,7 @@ use Larva\Transaction\Models\Transfer;
  *
  * @author Tongle Xu <xutongle@gmail.com>
  */
-class Withdrawal extends Model
+class Withdrawals extends Model
 {
     /**
      * 与模型关联的数据表。
@@ -143,7 +143,7 @@ class Withdrawal extends Model
     public function setSucceeded()
     {
         $this->update(['status' => static::STATUS_SUCCEEDED, 'succeeded_at' => $this->freshTimestamp()]);
-        event(new WithdrawalSuccess($this));
+        event(new WithdrawalsSuccess($this));
     }
 
     /**
@@ -160,7 +160,7 @@ class Withdrawal extends Model
             'current_integral' => bcadd($this->wallet->integral, $this->integral)
         ]);
         $this->update(['status' => static::STATUS_CANCELED, 'canceled_at' => $this->freshTimestamp()]);
-        event(new WithdrawalCanceled($this));
+        event(new WithdrawalsCanceled($this));
         return true;
     }
 
@@ -178,7 +178,7 @@ class Withdrawal extends Model
             'current_integral' => bcadd($this->wallet->integral, $this->integral)
         ]);
         $this->update(['status' => static::STATUS_FAILED, 'canceled_at' => $this->freshTimestamp()]);
-        event(new WithdrawalFailure($this));
+        event(new WithdrawalsFailure($this));
         return true;
     }
 

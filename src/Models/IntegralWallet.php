@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Foundation\Auth\User $user
  * @property Recharge[] $recharges 充值记录
  * @property Transaction[] $transactions 交易记录
- * @property Withdrawal[] $withdrawals 提现记录
+ * @property Withdrawals[] $withdrawals 提现记录
  */
 class IntegralWallet extends Model
 {
@@ -117,19 +117,6 @@ class IntegralWallet extends Model
     }
 
     /**
-     * 创建充值请求
-     * @param string $channel 渠道
-     * @param int $amount 金额 单位分
-     * @param string $type 支付类型
-     * @param string $clientIP 客户端IP
-     * @return Model|Recharge
-     */
-    public function recharge($channel, $amount, $type, $clientIP = null)
-    {
-        return $this->recharges()->create(['channel' => $channel, 'amount' => $amount, 'type' => $type, 'client_ip' => $clientIP]);
-    }
-
-    /**
      * 交易明细
      * @return \Illuminate\Database\Eloquent\Relations\hasMany
      */
@@ -144,7 +131,20 @@ class IntegralWallet extends Model
      */
     public function withdrawals()
     {
-        return $this->hasMany(Withdrawal::class, 'user_id', 'user_id');
+        return $this->hasMany(Withdrawals::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * 创建充值请求
+     * @param string $channel 渠道
+     * @param int $amount 金额 单位分
+     * @param string $type 支付类型
+     * @param string $clientIP 客户端IP
+     * @return Model|Recharge
+     */
+    public function rechargeAction($channel, $amount, $type, $clientIP = null)
+    {
+        return $this->recharges()->create(['channel' => $channel, 'amount' => $amount, 'type' => $type, 'client_ip' => $clientIP]);
     }
 
     /**
@@ -153,9 +153,9 @@ class IntegralWallet extends Model
      * @param string $channel 提现渠道
      * @param string $recipient 收款账户
      * @param array $metaData 附加信息
-     * @return false|Model|Withdrawal
+     * @return false|Model|Withdrawals
      */
-    public function withdrawal($integral, $channel, $recipient, $metaData = [])
+    public function withdrawalsAction($integral, $channel, $recipient, $metaData = [])
     {
         if ($integral < settings('integral.withdrawals_mix', 100)) {//提现金额小于最小提现金额不合法
             return false;
@@ -167,7 +167,7 @@ class IntegralWallet extends Model
         return $this->withdrawals()->create([
             'integral' => $integral,
             'channel' => $channel,
-            'status' => Withdrawal::STATUS_PENDING,
+            'status' => Withdrawals::STATUS_PENDING,
             'recipient' => $recipient,
             'metadata' => $metaData
         ]);
@@ -178,11 +178,11 @@ class IntegralWallet extends Model
      * @param int $integral
      * @param string $recipient
      * @param array $metaData
-     * @return false|Withdrawal
+     * @return false|Withdrawals
      */
     public function withdrawalByWechat($integral, $recipient, $metaData = [])
     {
-        return $this->withdrawal($integral, \Larva\Transaction\Transaction::CHANNEL_WECHAT, $recipient, $metaData);
+        return $this->withdrawalsAction($integral, \Larva\Transaction\Transaction::CHANNEL_WECHAT, $recipient, $metaData);
     }
 
     /**
@@ -190,10 +190,10 @@ class IntegralWallet extends Model
      * @param int $integral
      * @param string $account 支付宝账号
      * @param array $metaData
-     * @return false|Withdrawal
+     * @return false|Withdrawals
      */
     public function withdrawalByAlipay($integral, $account, $metaData = [])
     {
-        return $this->withdrawal($integral, \Larva\Transaction\Transaction::CHANNEL_ALIPAY, $account, $metaData);
+        return $this->withdrawalsAction($integral, \Larva\Transaction\Transaction::CHANNEL_ALIPAY, $account, $metaData);
     }
 }

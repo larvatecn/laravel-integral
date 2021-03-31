@@ -9,51 +9,51 @@
 namespace Larva\Integral\Observers;
 
 use Larva\Integral\Models\Transaction;
-use Larva\Integral\Models\Withdrawal;
+use Larva\Integral\Models\Withdrawals;
 
 /**
  * 积分提现观察者
  *
  * @author Tongle Xu <xutongle@gmail.com>
  */
-class WithdrawalObserver
+class WithdrawalsObserver
 {
     /**
      * Handle the user "saving" event.
      *
-     * @param Withdrawal $withdrawal
+     * @param Withdrawals $withdrawals
      * @return void
      */
-    public function saving(Withdrawal $withdrawal)
+    public function saving(Withdrawals $withdrawals)
     {
         //根据汇率计算可得多少CNY
-        $withdrawal->amount = bcdiv($withdrawal->integral, settings('integral.withdrawals_cny_rate', 10),2);
+        $withdrawals->amount = bcdiv($withdrawals->integral, settings('integral.withdrawals_cny_rate', 10),2);
     }
 
     /**
      * Handle the user "created" event.
      *
-     * @param Withdrawal $withdrawal
+     * @param Withdrawals $withdrawals
      * @return void
      */
-    public function created(Withdrawal $withdrawal)
+    public function created(Withdrawals $withdrawals)
     {
-        $integral = -$withdrawal->integral;
-        $withdrawal->transaction()->create([
-            'user_id' => $withdrawal->user_id,
+        $integral = -$withdrawals->integral;
+        $withdrawals->transaction()->create([
+            'user_id' => $withdrawals->user_id,
             'type' => Transaction::TYPE_WITHDRAWAL,
             'description' => '积分提现',
             'integral' => $integral,
-            'current_integral' => bcadd($withdrawal->wallet->integral, $integral)
+            'current_integral' => bcadd($withdrawals->wallet->integral, $integral)
         ]);
 
-        $withdrawal->transfer()->create([
-            'amount' => bcmul($withdrawal->amount, 100),
+        $withdrawals->transfer()->create([
+            'amount' => bcmul($withdrawals->amount, 100),
             'currency' => 'CNY',
             'description' => '积分提现',
-            'channel' => $withdrawal->channel,
-            'metadata' => $withdrawal->metadata,
-            'recipient_id' => $withdrawal->recipient
+            'channel' => $withdrawals->channel,
+            'metadata' => $withdrawals->metadata,
+            'recipient_id' => $withdrawals->recipient
         ]);
     }
 }

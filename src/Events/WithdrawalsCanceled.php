@@ -9,28 +9,28 @@
 namespace Larva\Integral\Events;
 
 use Illuminate\Queue\SerializesModels;
-use Larva\Integral\Models\Recharge;
+use Larva\Integral\Models\Withdrawals;
 
 /**
- * 交易已支付
+ * 取消提现事件
  *
  * @author Tongle Xu <xutongle@gmail.com>
  */
-class RechargeShipped
+class WithdrawalsCanceled
 {
     use SerializesModels;
 
     /**
-     * @var Recharge
+     * @var Withdrawals
      */
-    public $recharge;
+    public $withdrawals;
 
     /**
-     * ChargeFailure constructor.
-     * @param Recharge $recharge
+     * RefundFailure constructor.
+     * @param Withdrawals $withdrawals
      */
-    public function __construct(Recharge $recharge)
+    public function __construct(Withdrawals $withdrawals)
     {
-        $this->recharge = $recharge;
+        $this->withdrawals = $withdrawals;
     }
 }

@@ -45,7 +45,7 @@ class IntegralServiceProvider extends ServiceProvider
         // Observers
         \Larva\Integral\Models\Recharge::observe(\Larva\Integral\Observers\RechargeObserver::class);
         \Larva\Integral\Models\Transaction::observe(\Larva\Integral\Observers\TransactionObserver::class);
-        \Larva\Integral\Models\Withdrawal::observe(\Larva\Integral\Observers\WithdrawalObserver::class);
+        \Larva\Integral\Models\Withdrawals::observe(\Larva\Integral\Observers\WithdrawalsObserver::class);
     }
 
     /**

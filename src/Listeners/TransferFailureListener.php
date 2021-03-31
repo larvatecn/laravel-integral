@@ -8,9 +8,8 @@
 
 namespace Larva\Integral\Listeners;
 
-
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Larva\Integral\Models\Withdrawal;
+use Larva\Integral\Models\Withdrawals;
 use Larva\Transaction\Events\TransferFailure;
 
 /**
@@ -38,7 +37,7 @@ class TransferFailureListener implements ShouldQueue
      */
     public function handle(TransferFailure $event)
     {
-        if ($event->transfer->order instanceof Withdrawal) {
+        if ($event->transfer->order instanceof Withdrawals) {
             $event->transfer->order->setFailed();
         }
     }
