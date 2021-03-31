@@ -56,7 +56,7 @@ class Recharge extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id', 'amount', 'channel', 'type', 'status', 'client_ip', 'succeeded_at'
+        'user_id', 'amount', 'integral', 'channel', 'type', 'status', 'client_ip', 'succeeded_at'
     ];
 
     /**
@@ -77,7 +77,6 @@ class Recharge extends Model
      */
     protected $attributes = [
         'status' => 'pending',
-
     ];
 
     /**

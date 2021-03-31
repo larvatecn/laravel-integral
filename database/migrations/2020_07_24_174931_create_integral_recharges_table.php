@@ -19,6 +19,7 @@ class CreateIntegralRechargesTable extends Migration
             $table->string('channel', 10);
             $table->string('type', 10);
             $table->unsignedInteger('amount')->default(0);
+            $table->integer('integral');//积分数
             $table->ipAddress('client_ip')->nullable();//发起支付请求客户端的 IP 地址
             $table->string('status', 10)->default('pending');
             $table->timestamps();
