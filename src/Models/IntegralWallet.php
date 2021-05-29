@@ -3,19 +3,24 @@
  * This is NOT a freeware, use is subject to license terms
  * @copyright Copyright (c) 2010-2099 Jinan Larva Information Technology Co., Ltd.
  * @link http://www.larva.com.cn/
- * @license http://www.larva.com.cn/license/
  */
+
+declare (strict_types=1);
 
 namespace Larva\Integral\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * 积分钱包
  * @property int $user_id
  * @property int $integral 可用积分
- * @property \Illuminate\Support\Carbon|null $created_at 创建时间
- * @property \Illuminate\Support\Carbon|null $updated_at 更新时间
+ * @property Carbon|null $created_at 创建时间
+ * @property Carbon|null $updated_at 更新时间
  *
  * @property \Illuminate\Foundation\Auth\User $user
  * @property Recharge[] $recharges 充值记录
@@ -69,10 +74,10 @@ class IntegralWallet extends Model
     /**
      * 为数组 / JSON 序列化准备日期。
      *
-     * @param \DateTimeInterface $date
+     * @param DateTimeInterface $date
      * @return string
      */
-    protected function serializeDate(\DateTimeInterface $date)
+    protected function serializeDate(DateTimeInterface $date): string
     {
         return $date->format($this->dateFormat ?: 'Y-m-d H:i:s');
     }
@@ -80,18 +85,18 @@ class IntegralWallet extends Model
     /**
      * Get the user that the charge belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(config('auth.providers.' . config('auth.guards.web.provider') . '.model'));
     }
 
     /**
      * 积分赠送明细
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
-    public function bonus()
+    public function bonus(): HasMany
     {
         return $this->hasMany(Bonus::class, 'user_id', 'user_id');
     }
@@ -102,34 +107,34 @@ class IntegralWallet extends Model
      * @param string $description
      * @return Model|Bonus
      */
-    public function give($integral, $description)
+    public function give(int $integral, string $description)
     {
         return $this->bonus()->create(['integral' => $integral, 'description' => $description]);
     }
 
     /**
      * 充值明细
-     * @return \Illuminate\Database\Eloquent\Relations\hasMany
+     * @return hasMany
      */
-    public function recharges()
+    public function recharges(): HasMany
     {
         return $this->hasMany(Recharge::class, 'user_id', 'user_id');
     }
 
     /**
      * 交易明细
-     * @return \Illuminate\Database\Eloquent\Relations\hasMany
+     * @return hasMany
      */
-    public function transactions()
+    public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'user_id', 'user_id');
     }
 
     /**
      * 提现明细
-     * @return \Illuminate\Database\Eloquent\Relations\hasMany
+     * @return hasMany
      */
-    public function withdrawals()
+    public function withdrawals(): HasMany
     {
         return $this->hasMany(Withdrawals::class, 'user_id', 'user_id');
     }
@@ -139,10 +144,10 @@ class IntegralWallet extends Model
      * @param string $channel 渠道
      * @param int $amount 金额 单位分
      * @param string $type 支付类型
-     * @param string $clientIP 客户端IP
+     * @param string|null $clientIP 客户端IP
      * @return Model|Recharge
      */
-    public function rechargeAction($channel, $amount, $type, $clientIP = null)
+    public function rechargeAction(string $channel, int $amount, string $type, string $clientIP = null)
     {
         return $this->recharges()->create(['channel' => $channel, 'amount' => $amount, 'type' => $type, 'client_ip' => $clientIP]);
     }
@@ -155,9 +160,9 @@ class IntegralWallet extends Model
      * @param array $metaData 附加信息
      * @return false|Model|Withdrawals
      */
-    public function withdrawalsAction($integral, $channel, $recipient, $metaData = [])
+    public function withdrawalsAction(int $integral, string $channel, string $recipient, array $metaData = [])
     {
-        $currentIntegral = bcsub($this->integral, $integral);
+        $currentIntegral = $this->integral + $integral;
         if ($currentIntegral < 0) {//计算后如果余额小于0，那么结果不合法。
             return false;
         }
@@ -177,7 +182,7 @@ class IntegralWallet extends Model
      * @param array $metaData
      * @return false|Withdrawals
      */
-    public function withdrawalByWechat($integral, $recipient, $metaData = [])
+    public function withdrawalByWechat(int $integral, string $recipient, array $metaData = [])
     {
         return $this->withdrawalsAction($integral, \Larva\Transaction\Transaction::CHANNEL_WECHAT, $recipient, $metaData);
     }
@@ -189,7 +194,7 @@ class IntegralWallet extends Model
      * @param array $metaData
      * @return false|Withdrawals
      */
-    public function withdrawalByAlipay($integral, $account, $metaData = [])
+    public function withdrawalByAlipay(int $integral, string $account, array $metaData = [])
     {
         return $this->withdrawalsAction($integral, \Larva\Transaction\Transaction::CHANNEL_ALIPAY, $account, $metaData);
     }

@@ -3,13 +3,18 @@
  * This is NOT a freeware, use is subject to license terms
  * @copyright Copyright (c) 2010-2099 Jinan Larva Information Technology Co., Ltd.
  * @link http://www.larva.com.cn/
- * @license http://www.larva.com.cn/license/
  */
+
+declare (strict_types=1);
 
 namespace Larva\Integral\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Larva\Integral\Events\RechargeFailure;
 use Larva\Integral\Events\RechargeShipped;
 use Larva\Integral\Notifications\RechargeSucceeded;
@@ -82,10 +87,10 @@ class Recharge extends Model
     /**
      * 为数组 / JSON 序列化准备日期。
      *
-     * @param \DateTimeInterface $date
+     * @param DateTimeInterface $date
      * @return string
      */
-    protected function serializeDate(\DateTimeInterface $date)
+    protected function serializeDate(DateTimeInterface $date): string
     {
         return $date->format($this->dateFormat ?: 'Y-m-d H:i:s');
     }
@@ -93,20 +98,18 @@ class Recharge extends Model
     /**
      * Get the user that the charge belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(
-            config('auth.providers.' . config('auth.guards.web.provider') . '.model')
-        );
+        return $this->belongsTo(config('auth.providers.' . config('auth.guards.web.provider') . '.model'));
     }
 
     /**
      * 关联钱包
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function wallet()
+    public function wallet(): BelongsTo
     {
         return $this->belongsTo(IntegralWallet::class, 'user_id', 'user_id');
     }
@@ -115,9 +118,9 @@ class Recharge extends Model
      * 关联交易
      * Get the entity's transaction.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphOne
+     * @return MorphOne
      */
-    public function transaction()
+    public function transaction(): MorphOne
     {
         return $this->morphOne(Transaction::class, 'source');
     }
@@ -126,9 +129,9 @@ class Recharge extends Model
      * 关联赠送
      * Get the entity's bonus.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphOne
+     * @return MorphOne
      */
-    public function bonus()
+    public function bonus(): MorphOne
     {
         return $this->morphOne(Bonus::class, 'source');
     }
@@ -137,9 +140,9 @@ class Recharge extends Model
      * 关联付款单
      * Get the entity's charge.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphOne
+     * @return MorphOne
      */
-    public function charge()
+    public function charge(): MorphOne
     {
         return $this->morphOne(Charge::class, 'order');
     }
@@ -156,16 +159,9 @@ class Recharge extends Model
             'type' => Transaction::TYPE_RECHARGE,
             'description' => trans('integral.integral_recharge'),
             'integral' => $this->integral,
-            'current_integral' => bcadd($this->wallet->integral, $this->integral)
+            'current_integral' => $this->wallet->integral + $this->integral
         ]);
-
-        if ($this->integral >= settings('integral.recharge_gift_mix', 100000)) {//赠送
-            $gift = bcmul(settings('integral.recharge_gift', 0), $this->integral);
-            if ($gift > 0) {
-                $this->bonus()->create(['user_id' => $this->user_id, 'integral' => $gift, 'description' => trans('integral.recharge_gift')]);
-            }
-        }
-        event(new RechargeShipped($this));
+        Event::dispatch(new RechargeShipped($this));
         $this->user->notify(new RechargeSucceeded($this->user, $this));
     }
 
@@ -175,14 +171,14 @@ class Recharge extends Model
     public function setFailure()
     {
         $this->update(['status' => static::STATUS_FAILED]);
-        event(new RechargeFailure($this));
+        Event::dispatch(new RechargeFailure($this));
     }
 
     /**
      * 状态
      * @return string[]
      */
-    public static function getStatusLabels()
+    public static function getStatusLabels(): array
     {
         return [
             static::STATUS_PENDING => '等待付款',
@@ -195,7 +191,7 @@ class Recharge extends Model
      * 获取状态Dot
      * @return string[]
      */
-    public static function getStatusDots()
+    public static function getStatusDots(): array
     {
         return [
             static::STATUS_PENDING => 'info',

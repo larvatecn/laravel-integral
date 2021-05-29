@@ -3,8 +3,9 @@
  * This is NOT a freeware, use is subject to license terms
  * @copyright Copyright (c) 2010-2099 Jinan Larva Information Technology Co., Ltd.
  * @link http://www.larva.com.cn/
- * @license http://www.larva.com.cn/license/
  */
+
+declare (strict_types=1);
 
 namespace Larva\Integral\Notifications;
 
@@ -52,9 +53,9 @@ class RechargeSucceeded extends Notification implements ShouldQueue
      * Get the notification's channels.
      *
      * @param mixed $notifiable
-     * @return array|string
+     * @return array
      */
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return ['mail'];
     }
@@ -63,9 +64,9 @@ class RechargeSucceeded extends Notification implements ShouldQueue
      * Build the mail representation of the notification.
      *
      * @param mixed $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
+     * @return MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
             ->subject(Lang::get('Integral recharge succeeded'))

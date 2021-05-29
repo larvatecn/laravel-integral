@@ -3,8 +3,9 @@
  * This is NOT a freeware, use is subject to license terms
  * @copyright Copyright (c) 2010-2099 Jinan Larva Information Technology Co., Ltd.
  * @link http://www.larva.com.cn/
- * @license http://www.larva.com.cn/license/
  */
+
+declare (strict_types=1);
 
 namespace Larva\Integral\Observers;
 
@@ -44,7 +45,7 @@ class WithdrawalsObserver
             'type' => Transaction::TYPE_WITHDRAWAL,
             'description' => '积分提现',
             'integral' => $integral,
-            'current_integral' => bcadd($withdrawals->wallet->integral, $integral)
+            'current_integral' => $withdrawals->wallet->integral + $integral
         ]);
 
         $withdrawals->transfer()->create([

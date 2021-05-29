@@ -3,13 +3,18 @@
  * This is NOT a freeware, use is subject to license terms
  * @copyright Copyright (c) 2010-2099 Jinan Larva Information Technology Co., Ltd.
  * @link http://www.larva.com.cn/
- * @license http://www.larva.com.cn/license/
  */
+
+declare (strict_types=1);
 
 namespace Larva\Integral\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\morphOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Larva\Integral\Events\WithdrawalsCanceled;
 use Larva\Integral\Events\WithdrawalsFailure;
 use Larva\Integral\Events\WithdrawalsSuccess;
@@ -88,10 +93,10 @@ class Withdrawals extends Model
     /**
      * 为数组 / JSON 序列化准备日期。
      *
-     * @param \DateTimeInterface $date
+     * @param DateTimeInterface $date
      * @return string
      */
-    protected function serializeDate(\DateTimeInterface $date)
+    protected function serializeDate(DateTimeInterface $date): string
     {
         return $date->format($this->dateFormat ?: 'Y-m-d H:i:s');
     }
@@ -99,21 +104,19 @@ class Withdrawals extends Model
     /**
      * Get the user that the charge belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(
-            config('auth.providers.' . config('auth.guards.web.provider') . '.model')
-        );
+        return $this->belongsTo(config('auth.providers.' . config('auth.guards.web.provider') . '.model'));
     }
 
     /**
      * Get the entity's transaction.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\morphOne
+     * @return morphOne
      */
-    public function transaction()
+    public function transaction(): morphOne
     {
         return $this->morphOne(Transaction::class, 'source');
     }
@@ -121,46 +124,48 @@ class Withdrawals extends Model
     /**
      * Get the entity's transfer.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\morphOne
+     * @return morphOne
      */
-    public function transfer()
+    public function transfer(): morphOne
     {
         return $this->morphOne(Transfer::class, 'order');
     }
 
     /**
      * 积分钱包
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function wallet()
+    public function wallet(): BelongsTo
     {
         return $this->belongsTo(IntegralWallet::class, 'user_id', 'user_id');
     }
 
     /**
      * 设置提现成功
+     * @return bool
      */
-    public function setSucceeded()
+    public function setSucceeded(): bool
     {
-        $this->update(['status' => static::STATUS_SUCCEEDED, 'succeeded_at' => $this->freshTimestamp()]);
-        event(new WithdrawalsSuccess($this));
+        $status = $this->update(['status' => static::STATUS_SUCCEEDED, 'succeeded_at' => $this->freshTimestamp()]);
+        Event::dispatch(new WithdrawalsSuccess($this));
+        return $status;
     }
 
     /**
      * 取消提现
      * @return bool
      */
-    public function setCanceled()
+    public function setCanceled(): bool
     {
         $this->transaction()->create([
             'user_id' => $this->user_id,
             'type' => Transaction::TYPE_WITHDRAWAL_REVOKED,
             'description' => '积分提现撤销',
             'integral' => $this->integral,
-            'current_integral' => bcadd($this->wallet->integral, $this->integral)
+            'current_integral' => $this->wallet->integral + $this->integral
         ]);
         $this->update(['status' => static::STATUS_CANCELED, 'canceled_at' => $this->freshTimestamp()]);
-        event(new WithdrawalsCanceled($this));
+        Event::dispatch(new WithdrawalsCanceled($this));
         return true;
     }
 
@@ -175,10 +180,10 @@ class Withdrawals extends Model
             'type' => Transaction::TYPE_WITHDRAWAL_FAILED,
             'description' => '积分提现失败平账',
             'integral' => $this->integral,
-            'current_integral' => bcadd($this->wallet->integral, $this->integral)
+            'current_integral' => $this->wallet->integral + $this->integral
         ]);
         $this->update(['status' => static::STATUS_FAILED, 'canceled_at' => $this->freshTimestamp()]);
-        event(new WithdrawalsFailure($this));
+        Event::dispatch(new WithdrawalsFailure($this));
         return true;
     }
 
@@ -186,7 +191,7 @@ class Withdrawals extends Model
      * 状态
      * @return string[]
      */
-    public static function getStatusLabels()
+    public static function getStatusLabels(): array
     {
         return [
             static::STATUS_PENDING => '等待处理',
@@ -200,7 +205,7 @@ class Withdrawals extends Model
      * 获取状态Dot
      * @return string[]
      */
-    public static function getStatusDots()
+    public static function getStatusDots(): array
     {
         return [
             static::STATUS_PENDING => 'info',

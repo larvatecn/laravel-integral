@@ -3,12 +3,16 @@
  * This is NOT a freeware, use is subject to license terms
  * @copyright Copyright (c) 2010-2099 Jinan Larva Information Technology Co., Ltd.
  * @link http://www.larva.com.cn/
- * @license http://www.larva.com.cn/license/
  */
+
+declare (strict_types=1);
 
 namespace Larva\Integral\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -74,10 +78,10 @@ class Transaction extends Model
     /**
      * 为数组 / JSON 序列化准备日期。
      *
-     * @param \DateTimeInterface $date
+     * @param DateTimeInterface $date
      * @return string
      */
-    protected function serializeDate(\DateTimeInterface $date)
+    protected function serializeDate(DateTimeInterface $date): string
     {
         return $date->format($this->dateFormat ?: 'Y-m-d H:i:s');
     }
@@ -86,7 +90,7 @@ class Transaction extends Model
      * 获取所有操作类型
      * @return array
      */
-    public static function getAllType()
+    public static function getAllType(): array
     {
         return [
             static::TYPE_RECHARGE => trans('integral.' . static::TYPE_RECHARGE),
@@ -108,16 +112,16 @@ class Transaction extends Model
      * 获取 TypeName
      * @return string
      */
-    public function getTypeNameAttribute()
+    public function getTypeNameAttribute(): string
     {
         $all = static::getAllType();
-        return isset($all[$this->type]) ? $all[$this->type] : trans('integral.' . $this->type);
+        return $all[$this->type] ?? trans('integral.' . $this->type);
     }
 
     /**
      * Get the source entity that the Transaction belongs to.
      */
-    public function source()
+    public function source(): MorphTo
     {
         return $this->morphTo();
     }
@@ -125,9 +129,9 @@ class Transaction extends Model
     /**
      * Get the user that the charge belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(
             config('auth.providers.' . config('auth.guards.web.provider') . '.model')
@@ -135,9 +139,9 @@ class Transaction extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function wallet()
+    public function wallet(): BelongsTo
     {
         return $this->belongsTo(IntegralWallet::class, 'user_id', 'user_id');
     }

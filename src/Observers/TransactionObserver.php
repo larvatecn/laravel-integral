@@ -6,6 +6,8 @@
  * @license http://www.larva.com.cn/license/
  */
 
+declare (strict_types=1);
+
 namespace Larva\Integral\Observers;
 
 use Larva\Integral\Exceptions\IntegralException;
